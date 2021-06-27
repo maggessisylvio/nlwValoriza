@@ -1,9 +1,14 @@
-import { request, Router } from "express";
-import { CreateUserController } from "./controllers/CreateUserController";
-import { CreateTagController } from "./controllers/CreateTagController";
-import { CreateComplimentController } from "./controllers/CreateComplimentController";
+import { Router } from "express";
 import { AuthenticateUserController } from "./controllers/AuthenticateUserController";
+import { CreateComplimentController } from "./controllers/CreateComplimentController";
+import { CreateTagController } from "./controllers/CreateTagController";
+import { CreateUserController } from "./controllers/CreateUserController";
+import { ListTagsController } from "./controllers/ListTagsController";
+import { ListUserReceiveComplimentsController } from "./controllers/ListUserReceiveComplimentsController";
+import { ListUsersController } from "./controllers/ListUsersController";
+import { ListUserSendComplimentsController } from "./controllers/ListUserSendComplimentsController";
 import { ensureAdmin } from "./middlewares/ensureAdmin";
+import { ensureAuthenticated } from "./middlewares/ensureAuthenticated";
 
 const router = Router();
 
@@ -12,9 +17,23 @@ const createTagController = new CreateTagController();
 const authenticateUserController = new AuthenticateUserController();
 const createComplimentController = new CreateComplimentController();
 
-router.post("/users", createUserController.handler);
-router.post("/tags", ensureAdmin, createTagController.handler); // middlewares é colocado diretamente na rota utilizada
-router.post("/login", authenticateUserController.handle);
-router.post("/compliments", createComplimentController.handle);
+const listUserReceiveComplimentsController = new ListUserReceiveComplimentsController();
+const listUserSendComplimentsController = new ListUserSendComplimentsController();
 
-export { router }
+const listTagsController = new ListTagsController();
+
+const listUsersController = new ListUsersController();
+
+router.post("/users", createUserController.handle);
+router.post("/tags", ensureAuthenticated, ensureAdmin, createTagController.handle); // middlewares é colocado diretamente na rota utilizada
+router.post("/login", authenticateUserController.handle);
+router.post("/compliments", ensureAuthenticated, createComplimentController.handle);
+
+router.get("/users/compliments/send", ensureAuthenticated, listUserSendComplimentsController.handle);
+router.get("/users/compliments/receive", ensureAuthenticated, listUserReceiveComplimentsController.handle);
+
+router.get("/tags", ensureAuthenticated, listTagsController.handle);
+
+router.get("/users", ensureAuthenticated, ensureAdmin, listUsersController.handle);
+
+export { router };
